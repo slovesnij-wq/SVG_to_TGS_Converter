@@ -3,6 +3,7 @@ import { X, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import Lottie from 'lottie-react';
 import { ungzipLottie } from '../utils/converter';
+import { translations, Language } from '../utils/translations';
 
 export interface PreviewFile {
   file: File;
@@ -15,6 +16,7 @@ export interface PreviewFile {
 interface PreviewModalProps {
   file: PreviewFile;
   onClose: () => void;
+  lang: Language;
 }
 
 function PreviewPane({ title, children }: { title: string, children: React.ReactNode }) {
@@ -47,7 +49,9 @@ function PreviewPane({ title, children }: { title: string, children: React.React
   );
 }
 
-export default function PreviewModal({ file, onClose }: PreviewModalProps) {
+export default function PreviewModal({ file, onClose, lang }: PreviewModalProps) {
+  const t = translations[lang];
+
   const lottieData = useMemo(() => {
     if (file.result) {
       try {
@@ -84,35 +88,35 @@ export default function PreviewModal({ file, onClose }: PreviewModalProps) {
 
         <div className="mb-8 text-center">
           <h3 className="text-2xl font-serif italic mb-1">{file.file.name}</h3>
-          <p className="text-[10px] uppercase tracking-widest opacity-60">Sticker Frame Preview (512x512)</p>
+          <p className="text-[10px] uppercase tracking-widest opacity-60">{t.previewModalTitle}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 overflow-y-auto min-h-0">
-          <PreviewPane title="SVG Source">
+          <PreviewPane title={t.svgSource}>
             {file.previewUrl ? (
               <img src={file.previewUrl} alt="preview" className="max-w-full max-h-full object-contain" />
             ) : (
               <div className="text-red-500 flex flex-col items-center gap-2">
                 <AlertCircle className="w-8 h-8" />
-                <span className="text-xs uppercase tracking-widest">Preview Unavailable</span>
+                <span className="text-xs uppercase tracking-widest">{t.previewUnavailable}</span>
               </div>
             )}
           </PreviewPane>
 
-          <PreviewPane title="Lottie Result">
+          <PreviewPane title={t.lottieResult}>
             {file.status === 'success' ? (
               lottieData ? (
                 <Lottie animationData={lottieData} loop={true} className="w-full h-full" />
               ) : (
                 <div className="text-red-500 flex flex-col items-center gap-2">
                   <AlertCircle className="w-8 h-8" />
-                  <span className="text-xs uppercase tracking-widest">Error loading Lottie data</span>
+                  <span className="text-xs uppercase tracking-widest">{t.errorLoading}</span>
                 </div>
               )
             ) : (
               <div className="text-[#141414]/40 flex flex-col items-center gap-2">
                 <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs uppercase tracking-widest">Processing...</span>
+                <span className="text-xs uppercase tracking-widest">{t.processing}</span>
               </div>
             )}
           </PreviewPane>
@@ -123,7 +127,7 @@ export default function PreviewModal({ file, onClose }: PreviewModalProps) {
             onClick={onClose}
             className="px-8 py-3 bg-[#141414] text-[#E4E3E0] text-xs uppercase tracking-widest hover:bg-[#141414]/90 transition-colors"
           >
-            Close Preview
+            {t.closePreview}
           </button>
         </div>
       </motion.div>

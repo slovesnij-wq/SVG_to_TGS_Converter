@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play, Eye, Maximize2, Archive } from 'lucide-react';
+import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play, Eye, Maximize2, Archive, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import JSZip from 'jszip';
 import { createLottieFromSvg, gzipLottie, LottieAnimation } from './utils/converter';
 import PreviewModal from './components/PreviewModal';
+import { translations, Language } from './utils/translations';
 
 interface FileStatus {
   file: File;
@@ -18,8 +19,11 @@ export default function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState<'batch' | 'sequence'>('batch');
   const [fps, setFps] = useState<30 | 60>(60);
+  const [lang, setLang] = useState<Language>('en');
   const [previewFile, setPreviewFile] = useState<FileStatus | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const t = translations[lang];
 
   const handleFiles = useCallback(async (newFiles: File[]) => {
     const svgFiles = newFiles.filter(f => f.name.toLowerCase().endsWith('.svg'));
@@ -86,14 +90,14 @@ export default function App() {
         const gzipped = gzipLottie(lottie);
 
         if (gzipped.length > 64 * 1024) {
-          throw new Error('File size exceeds 64KB limit');
+          throw new Error(t.fileSizeExceeds);
         }
 
         updatedFiles[i].status = 'success';
         updatedFiles[i].result = gzipped;
       } catch (err) {
         updatedFiles[i].status = 'error';
-        updatedFiles[i].error = err instanceof Error ? err.message : 'Unknown error';
+        updatedFiles[i].error = err instanceof Error ? err.message : t.unknownError;
       }
       setFiles([...updatedFiles]);
     }
@@ -132,7 +136,7 @@ export default function App() {
       const gzipped = gzipLottie(baseLottie);
       
       if (gzipped.length > 64 * 1024) {
-        throw new Error('Total animation size exceeds 64KB limit');
+        throw new Error(t.totalSizeExceeds);
       }
 
       const resultBlob = new Blob([gzipped], { type: 'application/x-gzip' });
@@ -145,7 +149,7 @@ export default function App() {
 
       setFiles(prev => prev.map(f => ({ ...f, status: 'success' })));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Sequence conversion failed';
+      const errorMsg = err instanceof Error ? err.message : t.sequenceFailed;
       setFiles(prev => prev.map(f => ({ ...f, status: 'error', error: errorMsg })));
     }
   };
@@ -186,22 +190,36 @@ export default function App() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-12 border-b border-[#141414] pb-6 flex justify-between items-end">
           <div>
-            <h1 className="text-4xl font-serif italic mb-2">SVG to TGS</h1>
-            <p className="text-sm opacity-60 uppercase tracking-widest">Telegram Animated Sticker Converter</p>
+            <h1 className="text-4xl font-serif italic mb-2">{t.title}</h1>
+            <p className="text-sm opacity-60 uppercase tracking-widest">{t.subtitle}</p>
           </div>
           <div className="flex flex-col items-end gap-4">
+            <div className="flex gap-2 p-1 bg-[#141414]/5 border border-[#141414]/10 mb-2">
+              <button 
+                onClick={() => setLang('en')}
+                className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${lang === 'en' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}
+              >
+                EN
+              </button>
+              <button 
+                onClick={() => setLang('ru')}
+                className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${lang === 'ru' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}
+              >
+                RU
+              </button>
+            </div>
             <div className="flex gap-2 p-1 bg-[#141414]/5 border border-[#141414]/10">
               <button 
                 onClick={() => setFps(30)}
                 className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${fps === 30 ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}
               >
-                30 FPS
+                {t.fps30}
               </button>
               <button 
                 onClick={() => setFps(60)}
                 className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${fps === 60 ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}
               >
-                60 FPS
+                {t.fps60}
               </button>
             </div>
             <div className="flex gap-4">
@@ -210,14 +228,14 @@ export default function App() {
                 className={`px-4 py-2 text-xs uppercase tracking-tighter border border-[#141414] transition-colors ${mode === 'batch' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/5'}`}
               >
                 <Layers className="inline-block w-3 h-3 mr-2" />
-                Batch Mode
+                {t.batchMode}
               </button>
               <button 
                 onClick={() => setMode('sequence')}
                 className={`px-4 py-2 text-xs uppercase tracking-tighter border border-[#141414] transition-colors ${mode === 'sequence' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/5'}`}
               >
                 <Play className="inline-block w-3 h-3 mr-2" />
-                Sequence Mode
+                {t.sequenceMode}
               </button>
             </div>
           </div>
@@ -225,9 +243,9 @@ export default function App() {
 
         <main>
           <div className="mb-6 flex gap-4 text-[10px] uppercase tracking-widest opacity-40">
-            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> 512x512 Fixed</div>
-            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Max 3s Duration</div>
-            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Max 64KB Size</div>
+            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t.fixedSize}</div>
+            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t.maxDuration}</div>
+            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t.maxSize}</div>
           </div>
 
           <div 
@@ -246,8 +264,8 @@ export default function App() {
               className="hidden" 
             />
             <Upload className="w-12 h-12 mx-auto mb-4 opacity-40" />
-            <p className="text-xl font-serif italic mb-2">Drop your SVG files here</p>
-            <p className="text-xs opacity-60 uppercase tracking-widest">or click to browse</p>
+            <p className="text-xl font-serif italic mb-2">{t.dropFiles}</p>
+            <p className="text-xs opacity-60 uppercase tracking-widest">{t.clickBrowse}</p>
           </div>
 
           {files.length > 0 && (
@@ -257,14 +275,14 @@ export default function App() {
               className="mt-12"
             >
               <div className="flex justify-between items-center mb-6 border-b border-[#141414] pb-2">
-                <h2 className="text-xs uppercase tracking-widest opacity-60">Files ({files.length})</h2>
+                <h2 className="text-xs uppercase tracking-widest opacity-60">{t.files} ({files.length})</h2>
                 <div className="flex gap-4">
                   {files.some(f => f.status === 'error') && (
                     <button 
                       onClick={() => setFiles(prev => prev.map(f => f.status === 'error' ? { ...f, status: 'pending', error: undefined } : f))}
                       className="text-xs uppercase tracking-tighter hover:underline text-red-600"
                     >
-                      Retry Failed
+                      {t.retryFailed}
                     </button>
                   )}
                   {files.some(f => f.status === 'success') && (
@@ -277,20 +295,20 @@ export default function App() {
                       }}
                       className="text-xs uppercase tracking-tighter hover:underline"
                     >
-                      Clear Completed
+                      {t.clearCompleted}
                     </button>
                   )}
-                  <button onClick={clearFiles} className="text-xs uppercase tracking-tighter hover:underline">Clear All</button>
+                  <button onClick={clearFiles} className="text-xs uppercase tracking-tighter hover:underline">{t.clearAll}</button>
                   {mode === 'batch' && files.some(f => f.status === 'success') && (
                     <button onClick={downloadAll} className="text-xs uppercase tracking-tighter hover:underline flex items-center gap-1">
-                      <Archive className="w-3 h-3" /> Download All
+                      <Archive className="w-3 h-3" /> {t.downloadAll}
                     </button>
                   )}
                   <button 
                     onClick={mode === 'batch' ? convertBatch : convertSequence}
                     className="text-xs uppercase tracking-tighter font-bold hover:underline"
                   >
-                    {mode === 'batch' ? 'Convert All' : 'Create Animation'}
+                    {mode === 'batch' ? t.convertAll : t.createAnimation}
                   </button>
                 </div>
               </div>
@@ -328,10 +346,10 @@ export default function App() {
                         <div>
                           <p className="text-sm font-mono">{f.file.name}</p>
                           <div className="flex gap-2">
-                            <p className="text-[10px] opacity-40 uppercase tracking-tighter">SVG: {(f.file.size / 1024).toFixed(1)} KB</p>
+                            <p className="text-[10px] opacity-40 uppercase tracking-tighter">{t.svg}: {(f.file.size / 1024).toFixed(1)} KB</p>
                             {f.result && (
                               <p className={`text-[10px] uppercase tracking-tighter font-bold ${f.result.length > 64 * 1024 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                TGS: {(f.result.length / 1024).toFixed(1)} KB
+                                {t.tgs}: {(f.result.length / 1024).toFixed(1)} KB
                               </p>
                             )}
                           </div>
@@ -342,7 +360,7 @@ export default function App() {
                         <button 
                           onClick={() => setPreviewFile(f)}
                           className="p-1 hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors"
-                          title="Preview"
+                          title={t.preview}
                         >
                           <Maximize2 className="w-4 h-4" />
                         </button>
@@ -382,9 +400,14 @@ export default function App() {
           )}
         </main>
 
-        <footer className="mt-24 pt-12 border-t border-[#141414] opacity-40 text-[10px] uppercase tracking-widest flex justify-between">
-          <p>SVG to TGS Converter v1.1</p>
-          <p>Built for Telegram Stickers</p>
+        <footer className="mt-24 pt-12 border-t border-[#141414] opacity-60 text-[10px] uppercase tracking-widest flex flex-col gap-4">
+          <div className="flex justify-between">
+            <p>{t.footerTitle}</p>
+            <p>{t.footerSubtitle}</p>
+          </div>
+          <p className="opacity-60 max-w-2xl">
+            {t.footerDesc}
+          </p>
         </footer>
       </div>
 
@@ -394,6 +417,7 @@ export default function App() {
           <PreviewModal 
             file={previewFile} 
             onClose={() => setPreviewFile(null)} 
+            lang={lang}
           />
         )}
       </AnimatePresence>
