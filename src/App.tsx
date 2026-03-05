@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play, Eye, Maximize2 } from 'lucide-react';
+import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play, Eye, Maximize2, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import JSZip from 'jszip';
 import { createLottieFromSvg, gzipLottie, LottieAnimation } from './utils/converter';
 
 interface FileStatus {
@@ -156,6 +157,26 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadAll = async () => {
+    const successfulFiles = files.filter(f => f.status === 'success' && f.result);
+    if (successfulFiles.length === 0) return;
+
+    const zip = new JSZip();
+    successfulFiles.forEach(f => {
+      if (f.result) {
+        zip.file(f.file.name.replace('.svg', '.tgs'), f.result);
+      }
+    });
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'stickers.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans p-6 md:p-12">
       <div className="max-w-4xl mx-auto">
@@ -235,6 +256,11 @@ export default function App() {
                 <h2 className="text-xs uppercase tracking-widest opacity-60">Files ({files.length})</h2>
                 <div className="flex gap-4">
                   <button onClick={clearFiles} className="text-xs uppercase tracking-tighter hover:underline">Clear All</button>
+                  {mode === 'batch' && files.some(f => f.status === 'success') && (
+                    <button onClick={downloadAll} className="text-xs uppercase tracking-tighter hover:underline flex items-center gap-1">
+                      <Archive className="w-3 h-3" /> Download All
+                    </button>
+                  )}
                   <button 
                     onClick={mode === 'batch' ? convertBatch : convertSequence}
                     className="text-xs uppercase tracking-tighter font-bold hover:underline"
