@@ -259,6 +259,27 @@ export default function App() {
               <div className="flex justify-between items-center mb-6 border-b border-[#141414] pb-2">
                 <h2 className="text-xs uppercase tracking-widest opacity-60">Files ({files.length})</h2>
                 <div className="flex gap-4">
+                  {files.some(f => f.status === 'error') && (
+                    <button 
+                      onClick={() => setFiles(prev => prev.map(f => f.status === 'error' ? { ...f, status: 'pending', error: undefined } : f))}
+                      className="text-xs uppercase tracking-tighter hover:underline text-red-600"
+                    >
+                      Retry Failed
+                    </button>
+                  )}
+                  {files.some(f => f.status === 'success') && (
+                    <button 
+                      onClick={() => {
+                        files.forEach(f => {
+                          if (f.status === 'success' && f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+                        });
+                        setFiles(prev => prev.filter(f => f.status !== 'success'));
+                      }}
+                      className="text-xs uppercase tracking-tighter hover:underline"
+                    >
+                      Clear Completed
+                    </button>
+                  )}
                   <button onClick={clearFiles} className="text-xs uppercase tracking-tighter hover:underline">Clear All</button>
                   {mode === 'batch' && files.some(f => f.status === 'success') && (
                     <button onClick={downloadAll} className="text-xs uppercase tracking-tighter hover:underline flex items-center gap-1">
@@ -273,6 +294,18 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Progress Bar */}
+              {files.some(f => f.status === 'processing' || f.status === 'success' || f.status === 'error') && (
+                <div className="w-full h-1 bg-[#141414]/10 mb-6 relative overflow-hidden">
+                  <motion.div 
+                    className="absolute top-0 left-0 h-full bg-[#141414]"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(files.filter(f => f.status === 'success' || f.status === 'error').length / files.length) * 100}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <AnimatePresence>

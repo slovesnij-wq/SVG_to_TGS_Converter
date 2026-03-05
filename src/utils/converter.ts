@@ -341,8 +341,15 @@ export function createLottieFromSvg(svgContent: string, name: string = 'Sticker'
   const height = parseInt(svg.getAttribute('height') || (viewBox ? viewBox[3].toString() : '512'));
   const offsetX = viewBox ? viewBox[0] : 0;
   const offsetY = viewBox ? viewBox[1] : 0;
-  const scaleX = 512 / (viewBox ? viewBox[2] : width);
-  const scaleY = 512 / (viewBox ? viewBox[3] : height);
+  
+  // Calculate scale to fit within 512x512 while preserving aspect ratio
+  const contentWidth = viewBox ? viewBox[2] : width;
+  const contentHeight = viewBox ? viewBox[3] : height;
+  const scale = Math.min(512 / contentWidth, 512 / contentHeight);
+  
+  // Calculate centering offsets
+  const centeredX = (512 - contentWidth * scale) / 2;
+  const centeredY = (512 - contentHeight * scale) / 2;
 
   const layers: LottieLayer[] = [];
   const elements = doc.querySelectorAll('path, rect, circle, ellipse, line, polygon, polyline');
@@ -507,7 +514,7 @@ export function createLottieFromSvg(svgContent: string, name: string = 'Sticker'
     const strokeColor = parseColor(stroke || 'none');
     const rawStrokeWidth = strokeWidth ? Number(strokeWidth) : (stroke ? 1 : 0);
     const matrixScale = Math.sqrt(ma * ma + mb * mb);
-    const sWidth = rawStrokeWidth * matrixScale * ((scaleX + scaleY) / 2);
+    const sWidth = rawStrokeWidth * matrixScale * scale;
 
     const opacity = getInheritedAttribute(el, 'opacity');
     const fillOpacity = getInheritedAttribute(el, 'fill-opacity');
@@ -525,9 +532,9 @@ export function createLottieFromSvg(svgContent: string, name: string = 'Sticker'
 
     const lottieSubPaths = svgPathToLottie(d);
     const processedPaths = lottieSubPaths.map(lp => ({
-      v: lp.v.map(([vx, vy]) => [(vx * ma + vy * mc + me - offsetX) * scaleX, (vx * mb + vy * md + mf - offsetY) * scaleY]),
-      i: lp.i.map(([vx, vy]) => [(vx * ma + vy * mc) * scaleX, (vx * mb + vy * md) * scaleY]),
-      o: lp.o.map(([vx, vy]) => [(vx * ma + vy * mc) * scaleX, (vx * mb + vy * md) * scaleY]),
+      v: lp.v.map(([vx, vy]) => [(vx * ma + vy * mc + me - offsetX) * scale + centeredX, (vx * mb + vy * md + mf - offsetY) * scale + centeredY]),
+      i: lp.i.map(([vx, vy]) => [(vx * ma + vy * mc) * scale, (vx * mb + vy * md) * scale]),
+      o: lp.o.map(([vx, vy]) => [(vx * ma + vy * mc) * scale, (vx * mb + vy * md) * scale]),
       c: lp.c
     }));
 
