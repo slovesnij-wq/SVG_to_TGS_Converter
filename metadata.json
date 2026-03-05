@@ -1,0 +1,5 @@
+{
+  "name": "SVG to TGS Converter",
+  "description": "Convert SVG files to Telegram Animated Sticker (.tgs) format. Supports batch processing and frame sequences.",
+  "requestFramePermissions": []
+}
