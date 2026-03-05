@@ -3,6 +3,7 @@ import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play,
 import { motion, AnimatePresence } from 'motion/react';
 import JSZip from 'jszip';
 import { createLottieFromSvg, gzipLottie, LottieAnimation } from './utils/converter';
+import PreviewModal from './components/PreviewModal';
 
 interface FileStatus {
   file: File;
@@ -34,14 +35,17 @@ export default function App() {
     setFiles(prev => [...prev, ...newStatuses]);
   }, []);
 
-  // Cleanup preview URLs
+  // Cleanup preview URLs on unmount
+  const filesRef = useRef(files);
+  filesRef.current = files;
+
   useEffect(() => {
     return () => {
-      files.forEach(f => {
+      filesRef.current.forEach(f => {
         if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
       });
     };
-  }, [files]);
+  }, []);
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -354,68 +358,10 @@ export default function App() {
       {/* Preview Modal */}
       <AnimatePresence>
         {previewFile && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#141414]/90 backdrop-blur-sm"
-            onClick={() => setPreviewFile(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#E4E3E0] p-8 max-w-2xl w-full relative"
-              onClick={e => e.stopPropagation()}
-            >
-              <button 
-                onClick={() => setPreviewFile(null)}
-                className="absolute top-4 right-4 p-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <div className="mb-6">
-                <h3 className="text-xl font-serif italic">{previewFile.file.name}</h3>
-                <p className="text-[10px] uppercase tracking-widest opacity-60">Sticker Frame Preview (512x512)</p>
-              </div>
-
-              <div className="relative aspect-square w-full max-w-[512px] mx-auto bg-white border border-[#141414] overflow-hidden">
-                {/* Grid Lines */}
-                <div className="absolute inset-0 pointer-events-none opacity-10" 
-                     style={{ backgroundImage: 'linear-gradient(#141414 1px, transparent 1px), linear-gradient(90deg, #141414 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-                
-                {/* Center Cross */}
-                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[#141414]/20 pointer-events-none" />
-                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-[#141414]/20 pointer-events-none" />
-
-                {/* Rulers */}
-                <div className="absolute top-0 left-0 w-full h-4 border-b border-[#141414]/20 flex justify-between px-1 text-[8px] font-mono opacity-40">
-                  <span>0</span><span>128</span><span>256</span><span>384</span><span>512</span>
-                </div>
-                <div className="absolute top-0 left-0 h-full w-4 border-r border-[#141414]/20 flex flex-col justify-between py-1 text-[8px] font-mono opacity-40" style={{ writingMode: 'vertical-rl' }}>
-                  <span>0</span><span>128</span><span>256</span><span>384</span><span>512</span>
-                </div>
-
-                {/* SVG Content */}
-                <div className="absolute inset-4 flex items-center justify-center">
-                  <img src={previewFile.previewUrl} alt="preview" className="max-w-full max-h-full object-contain" />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-between items-center">
-                <div className="text-[10px] font-mono opacity-60">
-                  FORMAT: SVG | TARGET: 512x512 TGS
-                </div>
-                <button 
-                  onClick={() => setPreviewFile(null)}
-                  className="px-6 py-2 bg-[#141414] text-[#E4E3E0] text-xs uppercase tracking-widest hover:bg-[#141414]/90 transition-colors"
-                >
-                  Close Preview
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <PreviewModal 
+            file={previewFile} 
+            onClose={() => setPreviewFile(null)} 
+          />
         )}
       </AnimatePresence>
     </div>

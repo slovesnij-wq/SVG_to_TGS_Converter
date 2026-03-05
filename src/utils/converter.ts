@@ -554,3 +554,8 @@ export function gzipLottie(lottie: LottieAnimation): Uint8Array {
   const json = JSON.stringify(lottie);
   return pako.gzip(json);
 }
+
+export function ungzipLottie(data: Uint8Array): LottieAnimation {
+  const json = pako.ungzip(data, { to: 'string' });
+  return JSON.parse(json);
+}
