@@ -41,8 +41,8 @@ The converter enforces all constraints and shows an error if a file exceeds the 
 **Prerequisites:** Node.js ≥ 18
 
 ```bash
-git clone https://github.com/slovesnij-wq/svg-to-tgs.git
-cd svg-to-tgs
+git clone https://github.com/slovesnij-wq/SVG_to_TGS_Converter.git
+cd SVG_to_TGS_Converter
 npm install
 npm run dev
 ```
@@ -98,8 +98,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 **Требования:** Node.js ≥ 18
 
 ```bash
-git clone https://github.com/slovesnij-wq/svg-to-tgs.git
-cd svg-to-tgs
+git clone https://github.com/slovesnij-wq/SVG_to_TGS_Converter.git
+cd SVG_to_TGS_Converter
 npm install
 npm run dev
 ```
