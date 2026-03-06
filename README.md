@@ -8,6 +8,9 @@
 
 > Convert SVG files to Telegram Animated Stickers (.tgs) — entirely in your browser.
 
+<img width="1623" height="1082" alt="SVG_TGS_EN_scr" src="https://github.com/user-attachments/assets/226d888c-2d3b-4c67-8a81-c213457d2649" />
+
+
 **[→ Try it online](https://svg-to-tgs-converter-gamma.vercel.app/)**
 
 ---
