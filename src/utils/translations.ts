@@ -4,6 +4,10 @@ export const translations = {
     subtitle: "Telegram Animated Sticker Converter",
     fps30: "30 FPS",
     fps60: "60 FPS",
+    scaleLabel: "Scale",
+    scaleHint: "0.1-1.0",
+    scaleDescription:
+      "Scale applies after the sticker is fitted into 512x512. Use 1 for full size, or a smaller value like 0.825 to keep transparent margins around it.",
     batchMode: "Batch Mode",
     sequenceMode: "Sequence Mode",
     fixedSize: "512x512 Fixed",
@@ -23,7 +27,8 @@ export const translations = {
     tgs: "TGS",
     footerTitle: "SVG to TGS Converter v1.1",
     footerSubtitle: "Built for Telegram Stickers",
-    footerDesc: "Free online tool to convert SVG files to Telegram Animated Sticker (TGS) format. Features include batch processing, automatic Lottie conversion, and instant preview. All processing happens securely in your browser - no files are uploaded to any server.",
+    footerDesc:
+      "Free online tool to convert SVG files to Telegram Animated Sticker (TGS) format. Features include batch processing, automatic Lottie conversion, and instant preview. All processing happens securely in your browser - no files are uploaded to any server.",
     previewModalTitle: "Sticker Frame Preview (512x512)",
     svgSource: "SVG Source",
     lottieResult: "Lottie Result",
@@ -34,16 +39,20 @@ export const translations = {
     fileSizeExceeds: "File size exceeds 64KB limit",
     totalSizeExceeds: "Total animation size exceeds 64KB limit",
     sequenceFailed: "Sequence conversion failed",
-    unknownError: "Unknown error"
+    unknownError: "Unknown error",
   },
   ru: {
     title: "SVG в TGS",
     subtitle: "Конвертер анимированных стикеров Telegram",
     fps30: "30 FPS",
     fps60: "60 FPS",
+    scaleLabel: "Масштаб",
+    scaleHint: "0.1-1.0",
+    scaleDescription:
+      "Масштаб применяется после вписывания стикера в 512x512. Значение 1 оставляет полный размер, а меньшее число, например 0.825, добавляет прозрачные поля по краям.",
     batchMode: "Пакетный режим",
     sequenceMode: "Режим последовательности",
-    fixedSize: "512x512 Фиксировано",
+    fixedSize: "512x512 фиксировано",
     maxDuration: "Макс. длительность 3с",
     maxSize: "Макс. размер 64КБ",
     dropFiles: "Перетащите SVG файлы сюда",
@@ -60,7 +69,8 @@ export const translations = {
     tgs: "TGS",
     footerTitle: "SVG в TGS Конвертер v1.1",
     footerSubtitle: "Создано для стикеров Telegram",
-    footerDesc: "Бесплатный онлайн-инструмент для конвертации SVG файлов в формат анимированных стикеров Telegram (TGS). Поддерживает пакетную обработку, автоматическую конвертацию Lottie и мгновенный предпросмотр. Вся обработка происходит безопасно в вашем браузере - файлы не загружаются на сервер.",
+    footerDesc:
+      "Бесплатный онлайн-инструмент для конвертации SVG файлов в формат анимированных стикеров Telegram (TGS). Поддерживает пакетную обработку, автоматическую конвертацию Lottie и мгновенный предпросмотр. Вся обработка происходит безопасно в вашем браузере - файлы не загружаются на сервер.",
     previewModalTitle: "Предпросмотр кадра стикера (512x512)",
     svgSource: "Исходный SVG",
     lottieResult: "Результат Lottie",
@@ -71,8 +81,8 @@ export const translations = {
     fileSizeExceeds: "Размер файла превышает лимит 64КБ",
     totalSizeExceeds: "Общий размер анимации превышает лимит 64КБ",
     sequenceFailed: "Ошибка конвертации последовательности",
-    unknownError: "Неизвестная ошибка"
-  }
+    unknownError: "Неизвестная ошибка",
+  },
 };
 
-export type Language = 'en' | 'ru';
+export type Language = "en" | "ru";

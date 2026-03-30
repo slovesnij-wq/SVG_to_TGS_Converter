@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play, Eye, Maximize2, Archive, Globe } from 'lucide-react';
+import { Upload, FileType, Download, CheckCircle2, AlertCircle, X, Layers, Play, Maximize2, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import JSZip from 'jszip';
-import { createLottieFromSvg, gzipLottie, LottieAnimation } from './utils/converter';
+import { createLottieFromSvg, gzipLottie } from './utils/converter';
 import PreviewModal from './components/PreviewModal';
 import { translations, Language } from './utils/translations';
 
@@ -14,11 +14,28 @@ interface FileStatus {
   previewUrl?: string;
 }
 
+const MIN_SCALE_MULTIPLIER = 0.1;
+const MAX_SCALE_MULTIPLIER = 1;
+
+const clampScaleMultiplier = (value: number): number => {
+  if (!Number.isFinite(value)) return 1;
+  return Math.min(MAX_SCALE_MULTIPLIER, Math.max(MIN_SCALE_MULTIPLIER, value));
+};
+
+const parseScaleMultiplier = (value: string): number => {
+  return clampScaleMultiplier(Number.parseFloat(value.replace(',', '.')));
+};
+
+const formatScaleMultiplier = (value: number): string => {
+  return value.toFixed(3).replace(/\.?0+$/, '');
+};
+
 export default function App() {
   const [files, setFiles] = useState<FileStatus[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState<'batch' | 'sequence'>('batch');
   const [fps, setFps] = useState<30 | 60>(60);
+  const [scaleMultiplierInput, setScaleMultiplierInput] = useState('1');
   const [lang, setLang] = useState<Language>('en');
   const [previewFile, setPreviewFile] = useState<FileStatus | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +94,7 @@ export default function App() {
   };
 
   const convertBatch = async () => {
+    const scaleMultiplier = parseScaleMultiplier(scaleMultiplierInput);
     const updatedFiles = [...files];
     for (let i = 0; i < updatedFiles.length; i++) {
       if (updatedFiles[i].status === 'success') continue;
@@ -86,7 +104,12 @@ export default function App() {
         setFiles([...updatedFiles]);
 
         const content = await updatedFiles[i].file.text();
-        const lottie = createLottieFromSvg(content, updatedFiles[i].file.name.replace('.svg', ''), fps);
+        const lottie = createLottieFromSvg(
+          content,
+          updatedFiles[i].file.name.replace('.svg', ''),
+          fps,
+          scaleMultiplier
+        );
         const gzipped = gzipLottie(lottie);
 
         if (gzipped.length > 64 * 1024) {
@@ -105,6 +128,7 @@ export default function App() {
 
   const convertSequence = async () => {
     if (files.length === 0) return;
+    const scaleMultiplier = parseScaleMultiplier(scaleMultiplierInput);
 
     try {
       setFiles(prev => prev.map(f => ({ ...f, status: 'processing' })));
@@ -116,14 +140,14 @@ export default function App() {
       const totalFrames = files.length * framesPerSvg;
       
       const firstContent = await files[0].file.text();
-      const baseLottie = createLottieFromSvg(firstContent, 'AnimatedSticker', fps);
+      const baseLottie = createLottieFromSvg(firstContent, 'AnimatedSticker', fps, scaleMultiplier);
       
       baseLottie.op = totalFrames;
       baseLottie.layers = [];
 
       for (let i = 0; i < files.length; i++) {
         const content = await files[i].file.text();
-        const frameLottie = createLottieFromSvg(content, 'Frame', fps);
+        const frameLottie = createLottieFromSvg(content, 'Frame', fps, scaleMultiplier);
         
         frameLottie.layers.forEach(layer => {
           layer.ip = i * framesPerSvg;
@@ -185,6 +209,16 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handleScaleMultiplierChange = (value: string) => {
+    if (/^\d*([.,]\d*)?$/.test(value)) {
+      setScaleMultiplierInput(value);
+    }
+  };
+
+  const handleScaleMultiplierBlur = () => {
+    setScaleMultiplierInput(formatScaleMultiplier(parseScaleMultiplier(scaleMultiplierInput)));
+  };
+
   return (
     <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans p-6 md:p-12">
       <div className="max-w-4xl mx-auto">
@@ -222,6 +256,21 @@ export default function App() {
                 {t.fps60}
               </button>
             </div>
+            <label className="flex flex-col items-end gap-2">
+              <span className="text-[10px] uppercase tracking-widest opacity-60">{t.scaleLabel}</span>
+              <div className="flex items-center gap-3 p-2 bg-[#141414]/5 border border-[#141414]/10">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={scaleMultiplierInput}
+                  onChange={(e) => handleScaleMultiplierChange(e.target.value)}
+                  onBlur={handleScaleMultiplierBlur}
+                  className="w-20 bg-transparent border-b border-[#141414]/20 px-1 py-1 text-right text-sm font-mono outline-none focus:border-[#141414]"
+                  aria-label={t.scaleLabel}
+                />
+                <span className="text-[10px] uppercase tracking-widest opacity-50">{t.scaleHint}</span>
+              </div>
+            </label>
             <div className="flex gap-4">
               <button 
                 onClick={() => setMode('batch')}
@@ -247,6 +296,7 @@ export default function App() {
             <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t.maxDuration}</div>
             <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t.maxSize}</div>
           </div>
+          <p className="mb-6 text-xs opacity-60">{t.scaleDescription}</p>
 
           <div 
             onDragOver={onDragOver}

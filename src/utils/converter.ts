@@ -1,5 +1,8 @@
 import pako from 'pako';
 
+const MIN_SCALE_MULTIPLIER = 0.1;
+const MAX_SCALE_MULTIPLIER = 1;
+
 export interface LottieShape {
   ty: string;
   nm?: string;
@@ -37,6 +40,11 @@ export interface LottieAnimation {
 const safeNum = (n: number): number => {
   if (isNaN(n) || !isFinite(n)) return 0;
   return Math.round(n * 1000) / 1000;
+};
+
+const clampScaleMultiplier = (value: number): number => {
+  if (!isFinite(value)) return 1;
+  return Math.min(MAX_SCALE_MULTIPLIER, Math.max(MIN_SCALE_MULTIPLIER, value));
 };
 
 /**
@@ -329,7 +337,12 @@ function arcToCubicBeziers(x1: number, y1: number, rx: number, ry: number, angle
   return result;
 }
 
-export function createLottieFromSvg(svgContent: string, name: string = 'Sticker', fps: number = 60): LottieAnimation {
+export function createLottieFromSvg(
+  svgContent: string,
+  name: string = 'Sticker',
+  fps: number = 60,
+  scaleMultiplier: number = 1
+): LottieAnimation {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgContent, 'image/svg+xml');
   const svg = doc.querySelector('svg');
@@ -345,11 +358,12 @@ export function createLottieFromSvg(svgContent: string, name: string = 'Sticker'
   // Calculate scale to fit within 512x512 while preserving aspect ratio
   const contentWidth = viewBox ? viewBox[2] : width;
   const contentHeight = viewBox ? viewBox[3] : height;
-  const scale = Math.min(512 / contentWidth, 512 / contentHeight);
+  const fitScale = Math.min(512 / contentWidth, 512 / contentHeight);
+  const outputScale = fitScale * clampScaleMultiplier(scaleMultiplier);
   
   // Calculate centering offsets
-  const centeredX = (512 - contentWidth * scale) / 2;
-  const centeredY = (512 - contentHeight * scale) / 2;
+  const centeredX = (512 - contentWidth * outputScale) / 2;
+  const centeredY = (512 - contentHeight * outputScale) / 2;
 
   const layers: LottieLayer[] = [];
   const elements = doc.querySelectorAll('path, rect, circle, ellipse, line, polygon, polyline');
@@ -514,7 +528,7 @@ export function createLottieFromSvg(svgContent: string, name: string = 'Sticker'
     const strokeColor = parseColor(stroke || 'none');
     const rawStrokeWidth = strokeWidth ? Number(strokeWidth) : (stroke ? 1 : 0);
     const matrixScale = Math.sqrt(ma * ma + mb * mb);
-    const sWidth = rawStrokeWidth * matrixScale * scale;
+    const sWidth = rawStrokeWidth * matrixScale * outputScale;
 
     const opacity = getInheritedAttribute(el, 'opacity');
     const fillOpacity = getInheritedAttribute(el, 'fill-opacity');
@@ -532,9 +546,9 @@ export function createLottieFromSvg(svgContent: string, name: string = 'Sticker'
 
     const lottieSubPaths = svgPathToLottie(d);
     const processedPaths = lottieSubPaths.map(lp => ({
-      v: lp.v.map(([vx, vy]) => [(vx * ma + vy * mc + me - offsetX) * scale + centeredX, (vx * mb + vy * md + mf - offsetY) * scale + centeredY]),
-      i: lp.i.map(([vx, vy]) => [(vx * ma + vy * mc) * scale, (vx * mb + vy * md) * scale]),
-      o: lp.o.map(([vx, vy]) => [(vx * ma + vy * mc) * scale, (vx * mb + vy * md) * scale]),
+      v: lp.v.map(([vx, vy]) => [(vx * ma + vy * mc + me - offsetX) * outputScale + centeredX, (vx * mb + vy * md + mf - offsetY) * outputScale + centeredY]),
+      i: lp.i.map(([vx, vy]) => [(vx * ma + vy * mc) * outputScale, (vx * mb + vy * md) * outputScale]),
+      o: lp.o.map(([vx, vy]) => [(vx * ma + vy * mc) * outputScale, (vx * mb + vy * md) * outputScale]),
       c: lp.c
     }));
 
